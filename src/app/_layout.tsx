@@ -1,18 +1,26 @@
 import { Tabs } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
-export default function Layout() {
+export default function RootLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarShowLabel: true,
 
         tabBarStyle: {
-          backgroundColor: "#0F172A",
+          position: "absolute",
+          left: 14,
+          right: 14,
+          bottom: 14,
+          height: 72,
+          backgroundColor: "rgba(8, 15, 32, 0.96)",
           borderTopWidth: 0,
-          height: 70,
-          paddingBottom: 10,
+          borderRadius: 24,
           paddingTop: 10,
+          paddingBottom: 10,
+          paddingHorizontal: 10,
+          elevation: 0,
         },
 
         tabBarActiveTintColor: "#3B82F6",
@@ -20,7 +28,8 @@ export default function Layout() {
 
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: "600",
+          fontWeight: "700",
+          marginTop: 2,
         },
       }}
     >
@@ -28,10 +37,10 @@ export default function Layout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
-              name="home"
-              size={size}
+              name={focused ? "home" : "home-outline"}
+              size={size ?? 22}
               color={color}
             />
           ),
@@ -42,10 +51,10 @@ export default function Layout() {
         name="food"
         options={{
           title: "Food",
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
-              name="restaurant"
-              size={size}
+              name={focused ? "restaurant" : "restaurant-outline"}
+              size={size ?? 22}
               color={color}
             />
           ),
@@ -56,10 +65,10 @@ export default function Layout() {
         name="workout"
         options={{
           title: "Workout",
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
-              name="barbell"
-              size={size}
+              name={focused ? "barbell" : "barbell-outline"}
+              size={size ?? 22}
               color={color}
             />
           ),
@@ -70,10 +79,10 @@ export default function Layout() {
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color, size }) => (
+          tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
-              name="person"
-              size={size}
+              name={focused ? "person" : "person-outline"}
+              size={size ?? 22}
               color={color}
             />
           ),

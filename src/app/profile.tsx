@@ -2,274 +2,233 @@ import React from "react";
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
 } from "react-native";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { LinearGradient } from "expo-linear-gradient";
+import { styles } from "./profile.styles";
+
+type StatCardProps = {
+  icon: keyof typeof Ionicons.glyphMap;
+  title: string;
+  value: string;
+  sub: string;
+  color: string;
+};
 
 export default function ProfileScreen() {
   return (
-    <ScrollView
-      style={styles.container}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Profile Header */}
-      <View style={styles.profileCard}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>R</Text>
+    <View style={styles.screen}>
+      <ScrollView
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 120 }}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <View>
+            <Text style={styles.smallText}>My Fitness Profile</Text>
+            <Text style={styles.heading}>Profile</Text>
+          </View>
+
+          <TouchableOpacity style={styles.settingsBtn}>
+            <Ionicons name="settings-outline" size={22} color="#fff" />
+          </TouchableOpacity>
         </View>
 
-        <Text style={styles.name}>Rishabh Patel</Text>
+        {/* Profile Hero Card */}
+        <LinearGradient
+          colors={["#0F172A", "#111827", "#1E1B4B"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.profileHero}
+        >
+          <View style={styles.profileTop}>
+            <LinearGradient
+              colors={["#7C3AED", "#2563EB"]}
+              style={styles.avatarBorder}
+            >
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>R</Text>
+              </View>
+            </LinearGradient>
 
-        <Text style={styles.email}>
-          Fitness Enthusiast 💪
-        </Text>
-      </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.name}>Rishabh Patel</Text>
+              <Text style={styles.subName}>Fitness Enthusiast 💪</Text>
 
-      {/* Stats Row 1 */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>74</Text>
-          <Text style={styles.statLabel}>Weight</Text>
+              <View style={styles.badgeRow}>
+                <View style={styles.badge}>
+                  <Ionicons name="flame" size={14} color="#F97316" />
+                  <Text style={styles.badgeText}>12 Day Streak</Text>
+                </View>
+
+                <View style={styles.badge}>
+                  <Ionicons name="barbell" size={14} color="#A855F7" />
+                  <Text style={styles.badgeText}>48 Workouts</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </LinearGradient>
+
+        {/* Stats Grid */}
+        <View style={styles.statsRow}>
+          <StatCard
+            icon="scale-outline"
+            title="Weight"
+            value="74.5"
+            sub="kg"
+            color="#3B82F6"
+          />
+          <StatCard
+            icon="resize-outline"
+            title="Height"
+            value="181"
+            sub="cm"
+            color="#8B5CF6"
+          />
         </View>
 
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>181</Text>
-          <Text style={styles.statLabel}>Height</Text>
+        <View style={styles.statsRow}>
+          <StatCard
+            icon="body-outline"
+            title="Body Fat"
+            value="18"
+            sub="%"
+            color="#F97316"
+          />
+          <StatCard
+            icon="walk-outline"
+            title="Steps"
+            value="6245"
+            sub="today"
+            color="#22C55E"
+          />
         </View>
-      </View>
 
-      {/* Stats Row 2 */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>18%</Text>
-          <Text style={styles.statLabel}>Body Fat</Text>
+        {/* Goals Card */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>Goals</Text>
+            <Ionicons name="flag-outline" size={18} color="#A855F7" />
+          </View>
+
+          <GoalRow label="Goal" value="Muscle Gain" />
+          <GoalRow label="Calories Target" value="2500 kcal" />
+          <GoalRow label="Protein Target" value="140g" />
+          <GoalRow label="Water Goal" value="3.5L" />
         </View>
 
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>6245</Text>
-          <Text style={styles.statLabel}>Steps</Text>
+        {/* Progress Summary */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardTitle}>Progress Summary</Text>
+            <Ionicons name="trending-up-outline" size={18} color="#3B82F6" />
+          </View>
+
+          <View style={styles.progressRow}>
+            <Text style={styles.progressLabel}>Weight Progress</Text>
+            <Text style={styles.progressValue}>70kg → 74.5kg</Text>
+          </View>
+
+          <View style={styles.progressBar}>
+            <LinearGradient
+              colors={["#7C3AED", "#3B82F6"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.progressFill, { width: "74%" }]}
+            />
+          </View>
+
+          <View style={styles.progressRow}>
+            <Text style={styles.progressLabel}>Protein Avg</Text>
+            <Text style={styles.progressValue}>125g/day</Text>
+          </View>
+
+          <View style={styles.progressBar}>
+            <LinearGradient
+              colors={["#22C55E", "#14B8A6"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.progressFill, { width: "82%" }]}
+            />
+          </View>
+
+          <View style={styles.progressRow}>
+            <Text style={styles.progressLabel}>Workout Consistency</Text>
+            <Text style={styles.progressValue}>85%</Text>
+          </View>
+
+          <View style={styles.progressBar}>
+            <LinearGradient
+              colors={["#F97316", "#F59E0B"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.progressFill, { width: "85%" }]}
+            />
+          </View>
         </View>
-      </View>
 
-      {/* Goals */}
-      <View style={styles.menuCard}>
-        <Text style={styles.sectionTitle}>
-          🎯 Goals
-        </Text>
+        {/* Achievement Card */}
+        <LinearGradient
+          colors={["#1E1B4B", "#111827"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.achievementCard}
+        >
+          <View style={styles.achievementIcon}>
+            <Ionicons name="trophy" size={26} color="#FACC15" />
+          </View>
 
-        <Text style={styles.menuItem}>
-          🎯 Goal: Muscle Gain
-        </Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.achievementTitle}>Latest Achievement</Text>
+            <Text style={styles.achievementText}>
+              7 Day Workout Streak Completed 🏆
+            </Text>
+          </View>
+        </LinearGradient>
 
-        <Text style={styles.menuItem}>
-          💧 Water Goal: 3L
-        </Text>
-
-        <Text style={styles.menuItem}>
-          🔥 Calories Target: 2500
-        </Text>
-
-        <Text style={styles.menuItem}>
-          🥩 Protein Target: 140g
-        </Text>
-
-        <Text style={styles.menuItem}>
-          🏆 Current Streak: 12 Days
-        </Text>
-      </View>
-
-      {/* Progress */}
-      <View style={styles.progressCard}>
-        <Text style={styles.progressTitle}>
-          📈 Progress Summary
-        </Text>
-
-        <Text style={styles.progressText}>
-          Weight: 70kg → 74kg
-        </Text>
-
-        <Text style={styles.progressText}>
-          Protein Avg: 125g/day
-        </Text>
-
-        <Text style={styles.progressText}>
-          Workouts Completed: 48
-        </Text>
-
-        <Text style={styles.progressText}>
-          Calories Burned: 12,540
-        </Text>
-      </View>
-
-      {/* Achievement Card */}
-      <View style={styles.achievementCard}>
-        <Text style={styles.achievementTitle}>
-          🏅 Latest Achievement
-        </Text>
-
-        <Text style={styles.achievementText}>
-          7 Day Workout Streak Completed
-        </Text>
-      </View>
-
-      {/* Button */}
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>
-          Edit Profile
-        </Text>
-      </TouchableOpacity>
-
-      <View style={{ height: 80 }} />
-    </ScrollView>
+        {/* Edit Button */}
+        <TouchableOpacity activeOpacity={0.9} style={styles.editBtn}>
+          <LinearGradient
+            colors={["#7C3AED", "#3B82F6"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.editBtnGradient}
+          >
+            <Ionicons name="create-outline" size={18} color="#fff" />
+            <Text style={styles.editBtnText}>Edit Profile</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </ScrollView>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#030712",
-    padding: 20,
-  },
+function StatCard({ icon, title, value, sub, color }: StatCardProps) {
+  return (
+    <View style={styles.statCard}>
+      <View style={[styles.statIconWrap, { backgroundColor: `${color}22` }]}>
+        <Ionicons name={icon} size={20} color={color} />
+      </View>
 
-  profileCard: {
-    backgroundColor: "#111827",
-    borderRadius: 28,
-    padding: 28,
-    alignItems: "center",
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "#1F2937",
-  },
+      <Text style={styles.statTitle}>{title}</Text>
 
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "#3B82F6",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 15,
-  },
+      <View style={styles.statValueRow}>
+        <Text style={styles.statValue}>{value}</Text>
+        <Text style={styles.statSub}>{sub}</Text>
+      </View>
+    </View>
+  );
+}
 
-  avatarText: {
-    fontSize: 40,
-    fontWeight: "800",
-    color: "#FFFFFF",
-  },
-
-  name: {
-    color: "#FFFFFF",
-    fontSize: 28,
-    fontWeight: "800",
-  },
-
-  email: {
-    color: "#94A3B8",
-    marginTop: 6,
-  },
-
-  statsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 15,
-  },
-
-  statCard: {
-    width: "48%",
-    backgroundColor: "#111827",
-    borderRadius: 22,
-    padding: 20,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#1F2937",
-  },
-
-  statValue: {
-    color: "#3B82F6",
-    fontSize: 28,
-    fontWeight: "800",
-  },
-
-  statLabel: {
-    color: "#94A3B8",
-    marginTop: 6,
-  },
-
-  menuCard: {
-    backgroundColor: "#111827",
-    borderRadius: 24,
-    padding: 20,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: "#1F2937",
-  },
-
-  sectionTitle: {
-    color: "#FFFFFF",
-    fontSize: 20,
-    fontWeight: "700",
-    marginBottom: 15,
-  },
-
-  menuItem: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    marginBottom: 14,
-  },
-
-  progressCard: {
-    backgroundColor: "#052E16",
-    borderRadius: 24,
-    padding: 20,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: "#22C55E",
-  },
-
-  progressTitle: {
-    color: "#FFFFFF",
-    fontSize: 20,
-    fontWeight: "700",
-    marginBottom: 12,
-  },
-
-  progressText: {
-    color: "#D1FAE5",
-    marginBottom: 8,
-  },
-
-  achievementCard: {
-    backgroundColor: "#172554",
-    borderRadius: 24,
-    padding: 20,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "#3B82F6",
-  },
-
-  achievementTitle: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 8,
-  },
-
-  achievementText: {
-    color: "#BFDBFE",
-  },
-
-  button: {
-    backgroundColor: "#3B82F6",
-    height: 60,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  buttonText: {
-    color: "#FFFFFF",
-    fontWeight: "700",
-    fontSize: 18,
-  },
-});
+function GoalRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.goalRow}>
+      <Text style={styles.goalLabel}>{label}</Text>
+      <Text style={styles.goalValue}>{value}</Text>
+    </View>
+  );
+}
