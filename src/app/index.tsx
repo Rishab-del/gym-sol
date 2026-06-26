@@ -14,7 +14,7 @@ import {
   STROKE_WIDTH,
   RADIUS,
   CIRCUMFERENCE,
-} from "./home.styles";
+} from "../styles/home.styles";
 
 type StatCardProps = {
   icon: keyof typeof Ionicons.glyphMap;

@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
-import { styles } from "./profile.styles";
+import { styles } from "../styles/profile.styles";
 
 type StatCardProps = {
   icon: keyof typeof Ionicons.glyphMap;

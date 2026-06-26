@@ -1,26 +1,34 @@
-import React, { useMemo, useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Modal,
-  TextInput,
-  FlatList,
-  Alert,
-} from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { LinearGradient } from "expo-linear-gradient";
-import { styles } from "./workout.styles";
-import { EXERCISE_LIBRARY } from "./exerciseLibrary";
-import type { Exercise, ExerciseLibraryItem, ExerciseSet } from "./types";
+import React, { useEffect, useMemo, useState } from "react";
+import { Pressable } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Calendar } from "react-native-calendars";
+import {
+  Alert,
+  FlatList,
+  Modal,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { EXERCISE_LIBRARY } from "../data/exerciseLibrary";
+import api from "../services/api";
+import { styles } from "../styles/workout.styles";
+import type {
+  Exercise,
+  ExerciseLibraryItem,
+  ExerciseSet,
+} from "../types/types";
 
 /* ---------------- helpers ---------------- */
 
 function buildSetDetails(
   totalSets: number,
   reps: number,
-  weight: string
+  weight: string,
 ): ExerciseSet[] {
   return Array.from({ length: totalSets }, (_, index) => ({
     id: `${Date.now()}_${index + 1}`,
@@ -34,7 +42,7 @@ function buildSetDetails(
 function makeExerciseFromLibrary(
   item: ExerciseLibraryItem,
   id: string,
-  done = false
+  done = false,
 ): Exercise {
   return {
     id,
@@ -48,7 +56,7 @@ function makeExerciseFromLibrary(
     setDetails: buildSetDetails(
       item.defaultSets,
       item.defaultReps,
-      item.defaultWeight
+      item.defaultWeight,
     ),
   };
 }
@@ -63,37 +71,66 @@ const initialTodaysExercises: Exercise[] = [
   makeExerciseFromLibrary(getLibraryExercise(2), "3", false),
 ];
 
+
+
+
 /* ====================================================== */
 
 export default function WorkoutScreen() {
   const [todaysExercises, setTodaysExercises] =
-    useState<Exercise[]>(initialTodaysExercises);
+  useState<Exercise[]>([]);
 
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedExercise, setSelectedExercise] =
     useState<ExerciseLibraryItem | null>(null);
-const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
-    const handleToggleExpandExercise = (exerciseId: string) => {
-  setExpandedExerciseId((prev) => (prev === exerciseId ? null : exerciseId));
-};
+  const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(
+    null,
+  );
+  const today = new Date().toISOString().split("T")[0];
+  const [selectedDate, setSelectedDate] = useState(today);
+  const isToday = selectedDate === today;
+  const handleToggleExpandExercise = (exerciseId: string) => {
+    setExpandedExerciseId((prev) => (prev === exerciseId ? null : exerciseId));
+  };
+  const [showCalendar, setShowCalendar] = useState(false);
 
   /* edit modal state */
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingExerciseId, setEditingExerciseId] = useState<string | null>(
-    null
+    null,
   );
   const [editingExerciseName, setEditingExerciseName] = useState("");
   const [editSetDetails, setEditSetDetails] = useState<ExerciseSet[]>([]);
   const [editRestValue, setEditRestValue] = useState("");
+  const loadWorkout = async (date = selectedDate) => {
+  try {
+    const res = await api.get(`/workout/1/${date}`);
+
+    if (res.data) {
+      setTodaysExercises(res.data.exercises);
+    } else {
+      setTodaysExercises([]);
+    }
+  } catch (err) {
+    console.log(err);
+    setTodaysExercises([]);
+  }
+};
+useEffect(() => {
+  loadWorkout(selectedDate);
+}, [selectedDate]);
+
+const [saveModalVisible, setSaveModalVisible] = useState(false);
+    
 
   /* summary */
   const completedExercises = todaysExercises.filter((item) => item.done).length;
 
   const totalSets = todaysExercises.reduce(
     (sum, item) => sum + item.setDetails.length,
-    0
+    0,
   );
 
   const progress = useMemo(() => {
@@ -102,12 +139,12 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
   }, [completedExercises, todaysExercises.length]);
 
   const todayDateLabel = useMemo(() => {
-    return new Date().toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "short",
-      day: "numeric",
-    });
-  }, []);
+  return new Date(selectedDate).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  });
+}, [selectedDate]);
 
   const workoutSummary = useMemo(() => {
     if (todaysExercises.length === 0) {
@@ -125,7 +162,7 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
     });
 
     const sortedMuscles = Object.entries(muscleCount).sort(
-      (a, b) => b[1] - a[1]
+      (a, b) => b[1] - a[1],
     );
 
     const topMuscles = sortedMuscles.map(([muscle]) => muscle);
@@ -179,13 +216,13 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
 
   const handleAddExerciseToWorkout = (exercise: ExerciseLibraryItem) => {
     const alreadyExists = todaysExercises.some(
-      (item) => item.name.toLowerCase() === exercise.name.toLowerCase()
+      (item) => item.name.toLowerCase() === exercise.name.toLowerCase(),
     );
 
     if (alreadyExists) {
       Alert.alert(
         "Already added",
-        `${exercise.name} is already in today's workout.`
+        `${exercise.name} is already in today's workout.`,
       );
       return;
     }
@@ -193,7 +230,7 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
     const newExercise = makeExerciseFromLibrary(
       exercise,
       String(Date.now()),
-      false
+      false,
     );
 
     setTodaysExercises((prev) => [...prev, newExercise]);
@@ -216,11 +253,11 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
           style: "destructive",
           onPress: () => {
             setTodaysExercises((prev) =>
-              prev.filter((item) => item.id !== exerciseId)
+              prev.filter((item) => item.id !== exerciseId),
             );
           },
         },
-      ]
+      ],
     );
   };
 
@@ -240,7 +277,7 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
             done: nextDone,
           })),
         };
-      })
+      }),
     );
   };
 
@@ -252,7 +289,7 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
         if (exercise.id !== exerciseId) return exercise;
 
         const updatedSets = exercise.setDetails.map((set) =>
-          set.id === setId ? { ...set, done: !set.done } : set
+          set.id === setId ? { ...set, done: !set.done } : set,
         );
 
         const allDone =
@@ -263,7 +300,7 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
           setDetails: updatedSets,
           done: allDone,
         };
-      })
+      }),
     );
   };
 
@@ -278,7 +315,7 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
     setEditSetDetails(
       exercise.setDetails.map((set) => ({
         ...set,
-      }))
+      })),
     );
     setEditRestValue(exercise.rest || "");
     setEditModalVisible(true);
@@ -292,14 +329,14 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
               ...set,
               reps: Number(value.replace(/[^0-9]/g, "")) || 0,
             }
-          : set
-      )
+          : set,
+      ),
     );
   };
 
   const handleChangeEditSetWeight = (setId: string, value: string) => {
     setEditSetDetails((prev) =>
-      prev.map((set) => (set.id === setId ? { ...set, weight: value } : set))
+      prev.map((set) => (set.id === setId ? { ...set, weight: value } : set)),
     );
   };
 
@@ -312,13 +349,13 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
     }
 
     const invalidSet = editSetDetails.find(
-      (set) => !set.reps || set.reps <= 0 || !set.weight.trim()
+      (set) => !set.reps || set.reps <= 0 || !set.weight.trim(),
     );
 
     if (invalidSet) {
       Alert.alert(
         "Invalid set details",
-        "Please fill valid reps and weight for all sets."
+        "Please fill valid reps and weight for all sets.",
       );
       return;
     }
@@ -345,7 +382,7 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
             editSetDetails.length > 0 &&
             editSetDetails.every((set) => set.done === true),
         };
-      })
+      }),
     );
 
     closeEditModal();
@@ -406,7 +443,11 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
             <Text style={styles.heading}>Workout Log</Text>
           </View>
 
-          <TouchableOpacity style={styles.headerIconBtn}>
+          <TouchableOpacity
+    style={styles.headerIconBtn}
+    onPress={() => setShowCalendar(true)}
+>
+
             <Ionicons name="calendar-outline" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
@@ -487,7 +528,14 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
 
           <TouchableOpacity
             style={styles.addMiniBtn}
-            onPress={() => setAddModalVisible(true)}
+            onPress={() => {
+  if (!isToday) {
+    Alert.alert("Past Workout", "Previous workouts are read only.");
+    return;
+  }
+
+  setAddModalVisible(true);
+}}
           >
             <Ionicons name="add" size={16} color="#FFFFFF" />
             <Text style={styles.addMiniBtnText}>Add</Text>
@@ -505,7 +553,17 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
 
             <TouchableOpacity
               style={styles.emptyWorkoutBtn}
-              onPress={() => setAddModalVisible(true)}
+              onPress={() => {
+  if (!isToday) {
+    Alert.alert(
+      "Past Workout",
+      "Previous workouts are read only."
+    );
+    return;
+  }
+
+  setAddModalVisible(true);
+}}
             >
               <Text style={styles.emptyWorkoutBtnText}>Add Exercise</Text>
             </TouchableOpacity>
@@ -513,21 +571,24 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
         ) : (
           todaysExercises.map((exercise, index) => (
             <ExerciseCard
-  key={exercise.id}
-  index={index + 1}
-  exercise={exercise}
-  isExpanded={expandedExerciseId === exercise.id}
-  onToggleExpand={() => handleToggleExpandExercise(exercise.id)}
-  onDelete={() => handleDeleteExercise(exercise.id, exercise.name)}
-  onToggleDone={() => handleToggleDone(exercise.id)}
-  onEdit={() => handleEditExercise(exercise.id)}
-  onToggleSetDone={(setId) => handleToggleSetDone(exercise.id, setId)}
-/>
+              key={exercise.id}
+              index={index + 1}
+              exercise={exercise}
+              isExpanded={expandedExerciseId === exercise.id}
+              onToggleExpand={() => handleToggleExpandExercise(exercise.id)}
+              onDelete={() => handleDeleteExercise(exercise.id, exercise.name)}
+              onToggleDone={() => handleToggleDone(exercise.id)}
+              onEdit={() => handleEditExercise(exercise.id)}
+              onToggleSetDone={(setId) =>
+                handleToggleSetDone(exercise.id, setId)
+              }
+              readOnly={!isToday}
+            />
           ))
         )}
 
         {/* Bottom Buttons */}
-        <TouchableOpacity activeOpacity={0.9} style={styles.primaryButtonWrap}>
+        <TouchableOpacity activeOpacity={0.7} style={styles.primaryButtonWrap}>
           <LinearGradient
             colors={["#4F46E5", "#A855F7"]}
             start={{ x: 0, y: 0 }}
@@ -541,19 +602,48 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
           </LinearGradient>
         </TouchableOpacity>
 
-        <TouchableOpacity activeOpacity={0.9} style={styles.secondaryButton}>
-          <Ionicons name="save-outline" size={18} color="#CBD5E1" />
-          <Text style={styles.secondaryButtonText}>
-            Save Today&apos;s Workout
-          </Text>
-        </TouchableOpacity>
+        <Pressable
+  onPress={() => {
+    if (!isToday) {
+      Alert.alert(
+        "Past Workout",
+        "Previous workouts cannot be edited."
+      );
+      return;
+    }
+
+    setSaveModalVisible(true);
+  }}
+  style={({ pressed }) => [
+    styles.secondaryButton,
+    {
+      opacity: pressed ? 0.6 : 1,
+      transform: [{ scale: pressed ? 0.97 : 1 }],
+    },
+  ]}
+>
+  <Ionicons name="save-outline" size={18} color="#93a4ba" />
+  <Text style={styles.secondaryButtonText}>
+    Save Today&apos;s Workout
+  </Text>
+</Pressable>
       </ScrollView>
 
       {/* Floating Add Exercise Button */}
       <TouchableOpacity
-        activeOpacity={0.9}
+        activeOpacity={0.7}
         style={styles.fab}
-        onPress={() => setAddModalVisible(true)}
+        onPress={() => {
+          if (!isToday) {
+            Alert.alert(
+              "Past Workout",
+              "Previous workouts are read only."
+            );
+            return;
+          }
+
+          setAddModalVisible(true);
+        }}
       >
         <LinearGradient
           colors={["#7C3AED", "#3B82F6"]}
@@ -606,7 +696,7 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
               contentContainerStyle={{ paddingBottom: 24 }}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  activeOpacity={0.9}
+                  activeOpacity={0.7}
                   style={styles.libraryCard}
                   onPress={() => handleOpenExerciseDetail(item)}
                 >
@@ -626,20 +716,12 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
                     </View>
                   </View>
 
-                  <Ionicons
-                    name="chevron-forward"
-                    size={18}
-                    color="#CBD5E1"
-                  />
+                  <Ionicons name="chevron-forward" size={18} color="#CBD5E1" />
                 </TouchableOpacity>
               )}
               ListEmptyComponent={
                 <View style={styles.emptyWrap}>
-                  <Ionicons
-                    name="barbell-outline"
-                    size={28}
-                    color="#6B7280"
-                  />
+                  <Ionicons name="barbell-outline" size={28} color="#6B7280" />
                   <Text style={styles.emptyText}>No exercises found</Text>
                 </View>
               }
@@ -721,7 +803,7 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
                       Main: {selectedExercise.muscle}
                       {selectedExercise.secondaryMuscles?.length
                         ? `\nSecondary: ${selectedExercise.secondaryMuscles.join(
-                            ", "
+                            ", ",
                           )}`
                         : ""}
                     </Text>
@@ -765,7 +847,7 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
                   )}
 
                   <TouchableOpacity
-                    activeOpacity={0.9}
+                    activeOpacity={0.7}
                     style={styles.addExerciseButtonWrap}
                     onPress={() => handleAddExerciseToWorkout(selectedExercise)}
                   >
@@ -909,7 +991,7 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
 
               <TouchableOpacity
                 onPress={handleAddOneMoreSet}
-                activeOpacity={0.9}
+                activeOpacity={0.7}
                 style={{
                   borderRadius: 16,
                   borderWidth: 1,
@@ -957,7 +1039,7 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
                 <TouchableOpacity
                   style={[styles.primaryButtonWrap, { flex: 1 }]}
                   onPress={handleSaveEditedExercise}
-                  activeOpacity={0.9}
+                  activeOpacity={0.7}
                 >
                   <LinearGradient
                     colors={["#4F46E5", "#A855F7"]}
@@ -973,6 +1055,156 @@ const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null
           </View>
         </View>
       </Modal>
+
+      <Modal
+  visible={saveModalVisible}
+  transparent
+  animationType="fade"
+>
+  <View style={styles.modalOverlay}>
+    <View
+      style={{
+        backgroundColor: "#111827",
+        borderRadius: 24,
+        padding: 22,
+        marginHorizontal: 24,
+        borderWidth: 1,
+        borderColor: "#374151",
+      }}
+    >
+      <Ionicons
+        name="save-outline"
+        size={42}
+        color="#A855F7"
+        style={{ alignSelf: "center", marginBottom: 12 }}
+      />
+
+      <Text
+        style={{
+          color: "#fff",
+          fontSize: 20,
+          fontWeight: "700",
+          textAlign: "center",
+        }}
+      >
+        Save Workout?
+      </Text>
+
+      <Text
+        style={{
+          color: "#9CA3AF",
+          textAlign: "center",
+          marginTop: 10,
+          lineHeight: 22,
+        }}
+      >
+        Do you want to save today's workout?
+      </Text>
+
+      <View
+        style={{
+          flexDirection: "row",
+          marginTop: 24,
+          gap: 12,
+        }}
+      >
+        <TouchableOpacity
+          style={[styles.secondaryButton, { flex: 1, marginTop: 0 }]}
+          onPress={() => setSaveModalVisible(false)}
+        >
+          <Text style={styles.secondaryButtonText}>Cancel</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={{ flex: 1 }}
+          onPress={async () => {
+            setSaveModalVisible(false);
+
+            try {
+              await api.post("/workout", {
+                userId: "1",
+                workoutDate: selectedDate,
+                exercises: todaysExercises,
+              });
+
+              Alert.alert("Success", "Workout Saved");
+            } catch (err) {
+              Alert.alert("Error", "Failed to save workout");
+            }
+          }}
+        >
+          <LinearGradient
+            colors={["#4F46E5", "#A855F7"]}
+            style={styles.primaryButton}
+          >
+            <Text style={styles.primaryButtonText}>Save</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
+
+<Modal
+  visible={showCalendar}
+  transparent
+  animationType="fade"
+  onRequestClose={() => setShowCalendar(false)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.calendarContainer}>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 16,
+        }}
+      >
+        <Text
+          style={{
+            color: "#fff",
+            fontSize: 20,
+            fontWeight: "700",
+          }}
+        >
+          Workout Calendar
+        </Text>
+
+        <TouchableOpacity onPress={() => setShowCalendar(false)}>
+          <Ionicons name="close" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      <Calendar
+        current={selectedDate}
+        maxDate={today}
+        onDayPress={(day) => {
+          setSelectedDate(day.dateString);
+          setShowCalendar(false);
+        }}
+        theme={{
+          backgroundColor: "#111827",
+          calendarBackground: "#111827",
+
+          dayTextColor: "#fff",
+          monthTextColor: "#fff",
+          textDisabledColor: "#4B5563",
+
+          todayTextColor: "#A855F7",
+
+          selectedDayBackgroundColor: "#7C3AED",
+          selectedDayTextColor: "#fff",
+
+          arrowColor: "#A855F7",
+
+          textMonthFontWeight: "700",
+          textDayFontWeight: "600",
+        }}
+      />
+    </View>
+  </View>
+</Modal>
     </View>
   );
 }
@@ -1017,7 +1249,9 @@ function ExerciseCard({
   onToggleDone,
   onEdit,
   onToggleSetDone,
+  readOnly,
 }: {
+
   index: number;
   exercise: Exercise;
   isExpanded: boolean;
@@ -1026,12 +1260,13 @@ function ExerciseCard({
   onToggleDone: () => void;
   onEdit: () => void;
   onToggleSetDone: (setId: string) => void;
+  readOnly: boolean;
 }) {
   const completedSets = exercise.setDetails.filter((set) => set.done).length;
 
   return (
     <TouchableOpacity
-      activeOpacity={0.95}
+      activeOpacity={0.7}
       onPress={onToggleExpand}
       style={styles.exerciseCard}
     >
@@ -1056,7 +1291,9 @@ function ExerciseCard({
           <View
             style={[
               styles.statusBadge,
-              exercise.done ? styles.statusBadgeDone : styles.statusBadgePending,
+              exercise.done
+                ? styles.statusBadgeDone
+                : styles.statusBadgePending,
             ]}
           >
             <Text
@@ -1079,10 +1316,7 @@ function ExerciseCard({
           icon="layers-outline"
           text={`${exercise.setDetails.length} Sets`}
         />
-        <MetaPill
-          icon="repeat-outline"
-          text={`${exercise.reps} Reps`}
-        />
+        <MetaPill icon="repeat-outline" text={`${exercise.reps} Reps`} />
         <MetaPill icon="time-outline" text={`Rest ${exercise.rest}`} />
       </View>
 
@@ -1152,7 +1386,7 @@ function ExerciseCard({
                 </View>
 
                 <TouchableOpacity
-                  onPress={() => onToggleSetDone(set.id)}
+                  onPress={() => {if (readOnly) return;onToggleSetDone(set.id);}}
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
@@ -1181,9 +1415,18 @@ function ExerciseCard({
             <TouchableOpacity
               style={styles.actionBtn}
               onPress={(e) => {
-                e.stopPropagation?.();
-                onEdit();
-              }}
+    e.stopPropagation?.();
+
+    if (readOnly) {
+        Alert.alert(
+            "Past Workout",
+            "Previous workouts cannot be edited."
+        );
+        return;
+    }
+
+    onEdit();
+}}
             >
               <Ionicons name="create-outline" size={16} color="#CBD5E1" />
               <Text style={styles.actionBtnText}>Edit Sets</Text>
@@ -1192,9 +1435,18 @@ function ExerciseCard({
             <TouchableOpacity
               style={styles.actionBtn}
               onPress={(e) => {
-                e.stopPropagation?.();
-                onDelete();
-              }}
+    e.stopPropagation?.();
+
+    if (readOnly) {
+        Alert.alert(
+            "Past Workout",
+            "Previous workouts cannot be edited."
+        );
+        return;
+    }
+
+    onDelete();
+}}
             >
               <Ionicons name="trash-outline" size={16} color="#F87171" />
               <Text style={[styles.actionBtnText, { color: "#F87171" }]}>
@@ -1208,9 +1460,18 @@ function ExerciseCard({
                 exercise.done && styles.completeBtnDone,
               ]}
               onPress={(e) => {
-                e.stopPropagation?.();
-                onToggleDone();
-              }}
+    e.stopPropagation?.();
+
+    if (readOnly) {
+        Alert.alert(
+            "Past Workout",
+            "Previous workouts cannot be edited."
+        );
+        return;
+    }
+
+    onToggleDone();
+}}
             >
               <Ionicons
                 name={exercise.done ? "checkmark-circle" : "ellipse-outline"}
@@ -1241,6 +1502,7 @@ function MetaPill({
     <View style={styles.metaPill}>
       <Ionicons name={icon} size={14} color="#A855F7" />
       <Text style={styles.metaPillText}>{text}</Text>
+
     </View>
   );
 }
