@@ -787,9 +787,41 @@ calendarContainer: {
   backgroundColor: "#111827",
   marginHorizontal: 20,
   borderRadius: 24,
-  padding: 16,
+  padding: 30,
   borderWidth: 1,
   borderColor: "#374151",
   overflow: "hidden",
 },
+calendarOverlay: {
+  flex: 1,
+  backgroundColor: "rgba(0,0,0,0.7)",
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+calendarCard: {
+  width: "92%",
+  maxWidth: 380,
+  backgroundColor: "#111827",
+  borderRadius: 24,
+  borderWidth: 1,
+  borderColor: "#374151",
+  overflow: "hidden",
+},
+
+calendarHeader: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  paddingHorizontal: 18,
+  paddingTop: 18,
+  paddingBottom: 12,
+},
+
+calendarTitle: {
+  color: "#fff",
+  fontSize: 20,
+  fontWeight: "700",
+},
+
 });
