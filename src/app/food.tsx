@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   Modal,
   TextInput,
+  Alert,
 } from "react-native";
 
 type Meal = {
@@ -34,6 +35,7 @@ export default function FoodScreen() {
   const [selectedMeal, setSelectedMeal] =useState<Meal | null>(null);
 const [showMealOptions, setShowMealOptions] = useState(false);
 const [isEditing, setIsEditing] = useState(false);
+const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState(today);
 
@@ -71,23 +73,15 @@ const filteredFoods = useMemo(() => {
   const calories = nutrition.totalCalories;
   const targetCalories: number = 2500;
 
-  const deleteSelectedMeal = async () => {
-  if (!selectedMeal) return;
+const deleteSelectedMeal = () => {
+  setShowMealOptions(false);
 
-  try {
-
-    await api.delete(`/food/${selectedMeal._id}`);
-
-    setShowMealOptions(false);
-
-    loadFood(selectedDate);
-
-  } catch (err) {
-    console.log(err);
-  }
+  setTimeout(() => {
+    setDeleteModalVisible(true);
+  }, 200);
 };
-  
 const saveMeal = async () => {
+  
   if (!selectedFood) {
     alert("Please select a food");
     return;
@@ -100,20 +94,17 @@ const saveMeal = async () => {
 
   try {
     if (isEditing && selectedMeal) {
-      await api.put(
-        `/food/${selectedMeal.foodId}/${selectedMeal._id}`,
-        {
-          mealType,
-          foodName: selectedFood.name,
-          quantity: Number(quantity),
-          unit,
-          calories: Number(mealCalories),
-          protein: Number(mealProtein),
-          carbs: Number(mealCarbs),
-          fat: Number(mealFat),
-          time: mealTime,
-        }
-      );
+      await api.put(`/food/${selectedMeal.foodId}/${selectedMeal._id}`, {
+        mealType,
+        foodName: selectedFood.name,
+        quantity: Number(quantity),
+        unit,
+        calories: Number(mealCalories),
+        protein: Number(mealProtein),
+        carbs: Number(mealCarbs),
+        fat: Number(mealFat),
+        time: mealTime,
+      });
     } else {
       await api.post("/food", {
         userId: 1,
@@ -136,15 +127,13 @@ const saveMeal = async () => {
     setShowAddMeal(false);
     setShowSuccess(true);
 
-    setTimeout(() => {
-      setShowSuccess(false);
-    }, 1000);
+    setTimeout(() => setShowSuccess(false), 1000);
 
     setMealType("Breakfast");
-    setUnit("gm");
     setSearch("");
     setSelectedFood(null);
     setQuantity("");
+    setUnit("gm");
     setMealCalories("");
     setMealProtein("");
     setMealCarbs("");
@@ -152,11 +141,83 @@ const saveMeal = async () => {
     setMealTime("");
 
     loadFood(selectedDate);
-  } catch (err) {
-    console.log(err);
-    alert("Failed to save meal");
-  }
+  } catch (err: any) {
+  console.log("STATUS:", err.response?.status);
+  console.log("DATA:", err.response?.data);
+  console.log("MESSAGE:", err.message);
+  alert(JSON.stringify(err.response?.data || err.message));
+}
 };
+function NutritionCard({
+  icon,
+  color,
+  label,
+  value,
+  unit,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  color: string;
+  label: string;
+  value: string;
+  unit: string;
+}) {
+  return (
+    <View
+      style={{
+        width: "47%",
+        backgroundColor: "#111827",
+        borderRadius: 18,
+        paddingVertical: 18,
+        paddingHorizontal: 16,
+        borderWidth: 1,
+        borderColor: "#1F2937",
+      }}
+    >
+      <View
+        style={{
+          width: 42,
+          height: 42,
+          borderRadius: 21,
+          backgroundColor: `${color}22`,
+          justifyContent: "center",
+          alignItems: "center",
+          marginBottom: 12,
+        }}
+      >
+        <Ionicons name={icon} size={20} color={color} />
+      </View>
+
+      <Text
+        style={{
+          color: "#FFFFFF",
+          fontSize: 22,
+          fontWeight: "700",
+        }}
+      >
+        {value}
+        <Text
+          style={{
+            fontSize: 13,
+            color: "#94A3B8",
+          }}
+        >
+          {" "}
+          {unit}
+        </Text>
+      </Text>
+
+      <Text
+        style={{
+          color: "#9CA3AF",
+          marginTop: 4,
+          fontSize: 14,
+        }}
+      >
+        {label}
+      </Text>
+    </View>
+  );
+}
     
 
 
@@ -504,6 +565,9 @@ time={meal.time}
           activeOpacity={0.5}
           style={styles.addMealWrap}
           onPress={() => {
+  setIsEditing(false);
+  setSelectedMeal(null);
+
   setMealType("Breakfast");
   setSearch("");
   setSelectedFood(null);
@@ -642,21 +706,41 @@ time={meal.time}
   ))}
 </View>
 
-        <TextInput
-  placeholder="Search Food..."
-  placeholderTextColor="#6B7280"
-  value={search}
-  onChangeText={setSearch}
-  editable={!selectedFood}
+<View
   style={{
-    backgroundColor:"#1F2937",
-    color:"#fff",
-    borderRadius:14,
-    paddingHorizontal:16,
-    paddingVertical:14,
-    marginBottom:12,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1F2937",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: selectedFood ? "#8B5CF6" : "#374151",
+    paddingHorizontal: 14,
+    marginBottom: 14,
   }}
-/>
+>
+  <Ionicons
+    name="search-outline"
+    size={20}
+    color="#9CA3AF"
+    style={{ marginRight: 10 }}
+  />
+
+  <TextInput
+    placeholder="Search food..."
+    placeholderTextColor="#6B7280"
+    value={search}
+    onChangeText={setSearch}
+    editable={!selectedFood}
+    style={{
+      flex: 1,
+      color: "#FFFFFF",
+      fontSize: 16,
+      paddingVertical: 15,
+    }}
+  />
+
+
+</View>
 {selectedFood && (
   <TouchableOpacity
     onPress={() => {
@@ -717,119 +801,129 @@ setSearch(food.name);
 </Text>
 
 <Text style={{color:"#9CA3AF",marginTop:4}}>
-{food.calories} kcal • P {food.protein} • C {food.carbs} • F {food.fat}
+{food.calories} kcal • Protein {food.protein} • Carbs {food.carbs} • Fat {food.fat}
 </Text>
 
 </TouchableOpacity>
 
 ))}
 
-        <TextInput
-          placeholder="Quantity"
-          placeholderTextColor="#6B7280"
-          keyboardType="numeric"
-          value={quantity}
-          onChangeText={(text) => {
-  const value = text.replace(/[^0-9.]/g, "");
-  setQuantity(value);
-}}
-          style={{
-  backgroundColor:"#1F2937",
-  color:"#fff",
-  borderRadius:14,
-  paddingHorizontal:16,
-  paddingVertical:14,
-  marginBottom:12,
-}}
-        />
-
-        <TextInput
-editable={false}
-value={unit}
-style={{
-backgroundColor:"#111827",
-color:"#9CA3AF",
-borderRadius:14,
-paddingHorizontal:16,
-paddingVertical:14,
-marginBottom:12,
-}}
-/>
-
-        <TextInput
-editable={false}
-value={mealCalories}
-style={{
-backgroundColor:"#111827",
-color:"#9CA3AF",
-borderRadius:14,
-paddingHorizontal:16,
-paddingVertical:14,
-marginBottom:12,
-}}
-/>
-
-     <TextInput
-  placeholder="Protein"
-  placeholderTextColor="#6B7280"
-  value={mealProtein}
-  editable={false}
+       <View
   style={{
     backgroundColor: "#111827",
-    color: "#9CA3AF",
-    borderRadius: 14,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#374151",
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 12,
+    paddingVertical: 6,
+    marginBottom: 16,
   }}
-/>
+>
+  <Text
+    style={{
+      color: "#9CA3AF",
+      fontSize: 13,
+      marginBottom: 8,
+      fontWeight: "600",
+    }}
+  >
+    Quantity
+  </Text>
+
+  <View
+    style={{
+      flexDirection: "row",
+      alignItems: "center",
+    }}
+  >
+    <Ionicons
+      name="scale-outline"
+      size={20}
+      color="#8B5CF6"
+      style={{ marginRight: 12 }}
+    />
+
+    <TextInput
+      placeholder="Enter quantity"
+      placeholderTextColor="#6B7280"
+      keyboardType="numeric"
+      value={quantity}
+      onChangeText={(text) => {
+        const value = text.replace(/[^0-9.]/g, "");
+        setQuantity(value);
+      }}
+      style={{
+        flex: 1,
+        color: "#fff",
+        fontSize: 18,
+        fontWeight: "600",
+      }}
+    />
+
+    <View
+      style={{
+        backgroundColor: "#1F2937",
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 10,
+      }}
+    >
+      <Text
+        style={{
+          color: "#A855F7",
+          fontWeight: "700",
+        }}
+      >
+        {unit}
+      </Text>
+    </View>
+  </View>
+</View>
 
 
-        <TextInput
-  placeholder="Carbs"
-  placeholderTextColor="#6B7280"
-  value={mealCarbs}
-  editable={false}
+
+
+     <View
   style={{
-    backgroundColor: "#111827",
-    color: "#9CA3AF",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 12,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginBottom: 16,
+    rowGap: 12,
   }}
-/>
+>
+  <NutritionCard
+    icon="flame"
+    color="#F97316"
+    label="Calories"
+    value={mealCalories || "0"}
+    unit="kcal"
+  />
 
-        <TextInput
-  placeholder="Fat"
-  placeholderTextColor="#6B7280"
-  value={mealFat}
-  editable={false}
-  style={{
-    backgroundColor: "#111827",
-    color: "#9CA3AF",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 12,
-  }}
-/>
+  <NutritionCard
+    icon="barbell-outline"
+    color="#22C55E"
+    label="Protein"
+    value={mealProtein || "0"}
+    unit="g"
+  />
 
-        <TextInput
-          placeholder="Time (8:30 AM)"
-          placeholderTextColor="#6B7280"
-          value={mealTime}
-          onChangeText={setMealTime}
-          style={{
-  backgroundColor:"#1F2937",
-  color:"#fff",
-  borderRadius:14,
-  paddingHorizontal:16,
-  paddingVertical:14,
-  marginBottom:12,
-}}
-        />
+  <NutritionCard
+    icon="flash-outline"
+    color="#3B82F6"
+    label="Carbs"
+    value={mealCarbs || "0"}
+    unit="g"
+  />
 
+  <NutritionCard
+    icon="water-outline"
+    color="#F59E0B"
+    label="Fat"
+    value={mealFat || "0"}
+    unit="g"
+  />
+</View>
         <TouchableOpacity
           activeOpacity={0.8}
           onPress={saveMeal}
@@ -1071,6 +1165,131 @@ Cancel
 </View>
 
 </Modal>
+
+<Modal
+  visible={deleteModalVisible}
+  transparent
+  animationType="fade"
+>
+  <View style={styles.modalOverlay}>
+    <View
+      style={{
+        backgroundColor: "#111827",
+        borderRadius: 24,
+        padding: 22,
+        marginHorizontal: 24,
+        borderWidth: 1,
+        borderColor: "#374151",
+      }}
+    >
+      <Ionicons
+        name="trash-outline"
+        size={44}
+        color="#EF4444"
+        style={{
+          alignSelf: "center",
+          marginBottom: 12,
+        }}
+      />
+
+      <Text
+        style={{
+          color: "#fff",
+          fontSize: 20,
+          fontWeight: "700",
+          textAlign: "center",
+        }}
+      >
+        Delete Meal?
+      </Text>
+
+      <Text
+        style={{
+          color: "#9CA3AF",
+          textAlign: "center",
+          marginTop: 10,
+          lineHeight: 22,
+        }}
+      >
+        Are you sure you want to delete{"\n"}
+        <Text
+          style={{
+            color: "#fff",
+            fontWeight: "700",
+          }}
+        >
+          {selectedMeal?.foodName}
+        </Text>
+        ?
+      </Text>
+
+      <View
+        style={{
+          flexDirection: "row",
+          marginTop: 24,
+          gap: 12,
+        }}
+      >
+        <TouchableOpacity
+          style={{
+            flex: 1,
+            backgroundColor: "#1F2937",
+            borderRadius: 16,
+            justifyContent: "center",
+            alignItems: "center",
+            paddingVertical: 14,
+          }}
+          onPress={() => setDeleteModalVisible(false)}
+        >
+          <Text
+            style={{
+              color: "#CBD5E1",
+              fontWeight: "700",
+            }}
+          >
+            Cancel
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={{ flex: 1 }}
+          onPress={async () => {
+            setDeleteModalVisible(false);
+
+            try {
+              await api.delete(`/food/${selectedMeal?._id}`);
+
+              setSelectedMeal(null);
+              loadFood(selectedDate);
+            } catch (err) {
+              Alert.alert("Error", "Failed to delete meal.");
+            }
+          }}
+        >
+          <LinearGradient
+            colors={["#DC2626", "#EF4444"]}
+            style={{
+              borderRadius: 16,
+              paddingVertical: 14,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Text
+              style={{
+                color: "#fff",
+                fontWeight: "700",
+              }}
+            >
+              Delete
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
+
     </View>
   );
 }

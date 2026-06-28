@@ -88,6 +88,8 @@ export default function WorkoutScreen() {
   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(
     null,
   );
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+const [exerciseToDelete, setExerciseToDelete] = useState<Exercise | null>(null);
   const today = new Date().toISOString().split("T")[0];
   const [selectedDate, setSelectedDate] = useState(today);
   const isToday = selectedDate === today;
@@ -242,24 +244,19 @@ const [saveModalVisible, setSaveModalVisible] = useState(false);
 
   /* ---------------- delete ---------------- */
 
-  const handleDeleteExercise = (exerciseId: string, exerciseName: string) => {
-    Alert.alert(
-      "Remove Exercise",
-      `Are you sure you want to remove ${exerciseName} from today's workout?`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Remove",
-          style: "destructive",
-          onPress: () => {
-            setTodaysExercises((prev) =>
-              prev.filter((item) => item.id !== exerciseId),
-            );
-          },
-        },
-      ],
-    );
-  };
+  const handleDeleteExercise = (
+  exerciseId: string,
+  exerciseName: string,
+) => {
+  const exercise = todaysExercises.find(
+    (item) => item.id === exerciseId
+  );
+
+  if (!exercise) return;
+
+  setExerciseToDelete(exercise);
+  setDeleteModalVisible(true);
+};
 
   /* ---------------- complete exercise ---------------- */
 
@@ -1202,6 +1199,126 @@ const [saveModalVisible, setSaveModalVisible] = useState(false);
           textDayFontWeight: "600",
         }}
       />
+    </View>
+  </View>
+</Modal>
+
+<Modal
+  visible={deleteModalVisible}
+  transparent
+  animationType="fade"
+>
+  <View style={styles.modalOverlay}>
+    <View
+      style={{
+        backgroundColor: "#111827",
+        borderRadius: 24,
+        padding: 24,
+        marginHorizontal: 24,
+        borderWidth: 1,
+        borderColor: "#374151",
+      }}
+    >
+      <LinearGradient
+        colors={["#DC2626", "#EF4444"]}
+        style={{
+          width: 72,
+          height: 72,
+          borderRadius: 36,
+          justifyContent: "center",
+          alignItems: "center",
+          alignSelf: "center",
+          marginBottom: 18,
+        }}
+      >
+        <Ionicons
+          name="trash-outline"
+          size={36}
+          color="#fff"
+        />
+      </LinearGradient>
+
+      <Text
+        style={{
+          color: "#fff",
+          fontSize: 22,
+          fontWeight: "700",
+          textAlign: "center",
+        }}
+      >
+        Remove Exercise?
+      </Text>
+
+      <Text
+        style={{
+          color: "#94A3B8",
+          textAlign: "center",
+          marginTop: 10,
+          lineHeight: 22,
+        }}
+      >
+        This will remove{" "}
+        <Text
+          style={{
+            color: "#fff",
+            fontWeight: "700",
+          }}
+        >
+          {exerciseToDelete?.name}
+        </Text>{" "}
+        from today's workout.
+      </Text>
+
+      <View
+        style={{
+          flexDirection: "row",
+          gap: 12,
+          marginTop: 28,
+        }}
+      >
+        <TouchableOpacity
+          style={[
+            styles.secondaryButton,
+            {
+              flex: 1,
+              marginTop: 0,
+            },
+          ]}
+          onPress={() => {
+            setDeleteModalVisible(false);
+            setExerciseToDelete(null);
+          }}
+        >
+          <Text style={styles.secondaryButtonText}>
+            Cancel
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={{ flex: 1 }}
+          onPress={() => {
+            if (!exerciseToDelete) return;
+
+            setTodaysExercises((prev) =>
+              prev.filter(
+                (item) => item.id !== exerciseToDelete.id
+              )
+            );
+
+            setDeleteModalVisible(false);
+            setExerciseToDelete(null);
+          }}
+        >
+          <LinearGradient
+            colors={["#DC2626", "#EF4444"]}
+            style={styles.primaryButton}
+          >
+            <Text style={styles.primaryButtonText}>
+              Remove
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
     </View>
   </View>
 </Modal>
