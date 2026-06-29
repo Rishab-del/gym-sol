@@ -449,4 +449,24 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  workoutCircle: {
+  width: 80,
+  height: 80,
+  borderRadius: 40,
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+workoutLevel: {
+  color: "#fff",
+  fontSize: 16,
+  fontWeight: "700",
+  marginTop: 10,
+},
+
+workoutLevelSub: {
+  color: "#94A3B8",
+  fontSize: 12,
+  marginTop: 4,
+},
 });

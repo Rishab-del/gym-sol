@@ -1,4 +1,7 @@
-import React from "react";
+import React, { useEffect, useState, useCallback } from "react";
+import { useFocusEffect } from "expo-router";
+import api from "../services/api";
+import { useRouter } from "expo-router";
 import {
   View,
   Text,
@@ -25,12 +28,74 @@ type StatCardProps = {
   accent: string;
 };
 
-const calories = 1850;
-const goal = 2500;
-
 export default function HomeScreen() {
-  const progress = calories / goal;
-  const strokeDashoffset = CIRCUMFERENCE * (1 - progress);
+
+  const router = useRouter();
+  const [homeData, setHomeData] = useState<any>(null);
+  const calories = homeData?.caloriesConsumed ?? 0;
+const goal = homeData?.calorieGoal ?? 2500;
+
+const progress = calories / goal;
+const strokeDashoffset = CIRCUMFERENCE * (1 - progress);
+const loadHome = async () => {
+  try {
+    const today = new Date().toISOString().split("T")[0];
+
+    const foodRes = await api.get(`/food/1/${today}`);
+    const workoutRes = await api.get(`/workout/1/${today}`);
+
+    const exercises = workoutRes.data?.exercises || [];
+
+   let title = "No Workout";
+
+if (exercises.length > 0) {
+  const muscleCount: Record<string, number> = {};
+
+  exercises.forEach((exercise: any) => {
+    const muscle = exercise.muscle?.trim() || "Workout";
+    muscleCount[muscle] = (muscleCount[muscle] || 0) + 1;
+  });
+
+  const sortedMuscles = Object.entries(muscleCount).sort(
+    (a, b) => b[1] - a[1]
+  );
+
+  if (sortedMuscles.length === 1) {
+    title = `${sortedMuscles[0][0]} Day`;
+  } else if (sortedMuscles[0][1] > (sortedMuscles[1]?.[1] ?? 0)) {
+    title = `${sortedMuscles[0][0]} Day`;
+  } else {
+    title = "Mixed Workout";
+  }
+}
+    setHomeData({
+      caloriesConsumed: foodRes.data?.totalCalories || 0,
+      calorieGoal: 2500,
+
+      proteinConsumed: foodRes.data?.totalProtein || 0,
+      proteinGoal: 140,
+
+      carbsConsumed: foodRes.data?.totalCarbs || 0,
+      carbsGoal: 300,
+
+      fatConsumed: foodRes.data?.totalFat || 0,
+      fatGoal: 70,
+
+      workout: {
+        title,
+        exerciseCount: exercises.length,
+        duration: exercises.length * 8,
+      },
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
+useFocusEffect(
+  useCallback(() => {
+    loadHome();
+  }, [])
+);
 
   return (
     <View style={styles.screen}>
@@ -120,47 +185,83 @@ export default function HomeScreen() {
             <View style={styles.macroBlock}>
               <View style={styles.macroRow}>
                 <Text style={styles.macroLabel}>Protein</Text>
-                <Text style={styles.macroValue}>120g / 140g</Text>
+                <Text style={styles.macroValue}>
+  {homeData?.proteinConsumed ?? 0}g / {homeData?.proteinGoal ?? 140}g
+</Text>
               </View>
               <View style={styles.progressTrack}>
-                <View
-                  style={[
-                    styles.progressFill,
-                    { width: "86%", backgroundColor: "#A855F7" },
-                  ]}
-                />
-              </View>
+  <View
+    style={[
+      styles.progressFill,
+      {
+        width: `${
+          Math.min(
+            ((homeData?.proteinConsumed ?? 0) /
+              (homeData?.proteinGoal ?? 140)) * 100,
+            100
+          )
+        }%`,
+        backgroundColor: "#A855F7",
+      },
+    ]}
+  />
+</View>
             </View>
 
             <View style={styles.macroBlock}>
               <View style={styles.macroRow}>
                 <Text style={styles.macroLabel}>Carbs</Text>
-                <Text style={styles.macroValue}>220g / 300g</Text>
+                <Text style={styles.macroValue}>
+  {homeData?.carbsConsumed ?? 0}g / {homeData?.carbsGoal ?? 300}g
+</Text>
               </View>
               <View style={styles.progressTrack}>
                 <View
-                  style={[
-                    styles.progressFill,
-                    { width: "73%", backgroundColor: "#3B82F6" },
-                  ]}
-                />
+  style={[
+    styles.progressFill,
+    {
+      width: `${
+        Math.min(
+          ((homeData?.carbsConsumed ?? 0) /
+            (homeData?.carbsGoal ?? 300)) *
+            100,
+          100
+        )
+      }%`,
+      backgroundColor: "#3B82F6",
+    },
+  ]}
+/>
               </View>
             </View>
 
             <View style={styles.macroBlock}>
-              <View style={styles.macroRow}>
-                <Text style={styles.macroLabel}>Fat</Text>
-                <Text style={styles.macroValue}>60g / 70g</Text>
-              </View>
-              <View style={styles.progressTrack}>
-                <View
-                  style={[
-                    styles.progressFill,
-                    { width: "86%", backgroundColor: "#F59E0B" },
-                  ]}
-                />
-              </View>
-            </View>
+  <View style={styles.macroRow}>
+    <Text style={styles.macroLabel}>Fat</Text>
+    <Text style={styles.macroValue}>
+      {homeData?.fatConsumed ?? 0}g / {homeData?.fatGoal ?? 70}g
+    </Text>
+  </View>
+
+  <View style={styles.progressTrack}>
+    <View
+      style={[
+        styles.progressFill,
+        {
+          width: `${
+            Math.min(
+              ((homeData?.fatConsumed ?? 0) /
+                (homeData?.fatGoal ?? 70)) *
+                100,
+              100
+            )
+          }%`,
+          backgroundColor: "#F59E0B",
+        },
+      ]}
+    />
+  </View>
+</View>
           </View>
         </View>
 
@@ -214,8 +315,13 @@ export default function HomeScreen() {
           <View style={styles.workoutTop}>
             <View>
               <Text style={styles.workoutSmall}>Today&apos;s Workout</Text>
-              <Text style={styles.workoutTitle}>Push Day</Text>
-              <Text style={styles.workoutMeta}>6 Exercises • 45 min</Text>
+              <Text style={styles.workoutTitle}>
+  {homeData?.workout?.title || "No Workout"}
+</Text>
+              <Text style={styles.workoutMeta}>
+  {homeData?.workout?.exerciseCount ?? 0} Exercises •{" "}
+  {homeData?.workout?.duration ?? 0} min
+</Text>
             </View>
 
             <TouchableOpacity style={styles.arrowBtn}>
@@ -227,11 +333,13 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.workoutBottom}>
-            <TouchableOpacity activeOpacity={0.85} style={styles.startBtn}>
+          <View style={styles.workoutBottom}><TouchableOpacity activeOpacity={0.5}
+  style={styles.startBtn}
+  onPress={() => router.navigate("/workout")}
+>
               <LinearGradient
                 colors={["#7C3AED", "#3B82F6"]}
-                start={{ x: 0, y: 0 }}
+                start={{ x: 0, y: 1 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.startBtnGradient}
               >
