@@ -80,6 +80,7 @@ export default function WorkoutScreen() {
   const [todaysExercises, setTodaysExercises] =
   useState<Exercise[]>([]);
 
+  const [successModalVisible, setSuccessModalVisible] = useState(false);
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -1118,16 +1119,16 @@ const [saveModalVisible, setSaveModalVisible] = useState(false);
             setSaveModalVisible(false);
 
             try {
-              await api.post("/workout", {
-                userId: "1",
-                workoutDate: selectedDate,
-                exercises: todaysExercises,
-              });
+  await api.post("/workout", {
+    userId: "1",
+    workoutDate: selectedDate,
+    exercises: todaysExercises,
+  });
 
-              Alert.alert("Success", "Workout Saved");
-            } catch (err) {
-              Alert.alert("Error", "Failed to save workout");
-            }
+  setSuccessModalVisible(true);
+} catch (err) {
+  Alert.alert("Error", "Failed to save workout");
+}
           }}
         >
           <LinearGradient
@@ -1319,6 +1320,80 @@ const [saveModalVisible, setSaveModalVisible] = useState(false);
           </LinearGradient>
         </TouchableOpacity>
       </View>
+    </View>
+  </View>
+</Modal>
+
+<Modal
+  visible={successModalVisible}
+  transparent
+  animationType="fade"
+>
+  <View style={styles.modalOverlay}>
+    <View
+      style={{
+        backgroundColor: "#111827",
+        borderRadius: 24,
+        padding: 24,
+        marginHorizontal: 24,
+        borderWidth: 1,
+        borderColor: "#374151",
+      }}
+    >
+      <LinearGradient
+        colors={["#4F46E5", "#A855F7"]}
+        style={{
+          width: 80,
+          height: 80,
+          borderRadius: 40,
+          justifyContent: "center",
+          alignItems: "center",
+          alignSelf: "center",
+          marginBottom: 18,
+        }}
+      >
+        <Ionicons
+          name="checkmark"
+          size={44}
+          color="#fff"
+        />
+      </LinearGradient>
+
+      <Text
+        style={{
+          color: "#fff",
+          fontSize: 22,
+          fontWeight: "700",
+          textAlign: "center",
+        }}
+      >
+        Workout Saved 🎉
+      </Text>
+
+      <Text
+        style={{
+          color: "#94A3B8",
+          textAlign: "center",
+          marginTop: 10,
+          lineHeight: 22,
+        }}
+      >
+        Your workout has been saved successfully.
+      </Text>
+
+      <TouchableOpacity
+        style={{ marginTop: 28 }}
+        onPress={() => setSuccessModalVisible(false)}
+      >
+        <LinearGradient
+          colors={["#4F46E5", "#A855F7"]}
+          style={styles.primaryButton}
+        >
+          <Text style={styles.primaryButtonText}>
+            Awesome!
+          </Text>
+        </LinearGradient>
+      </TouchableOpacity>
     </View>
   </View>
 </Modal>

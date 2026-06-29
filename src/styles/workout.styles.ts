@@ -93,13 +93,13 @@ export const styles = StyleSheet.create({
 
   heroTitle: {
     color: "#FFFFFF",
-    fontSize: 34,
+    fontSize: 25,
     fontWeight: "800",
   },
 
   heroSubtitle: {
     color: "#CBD5E1",
-    fontSize: 15,
+    fontSize: 13,
     marginTop: 6,
   },
 
@@ -112,6 +112,7 @@ export const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.06)",
     paddingHorizontal: 12,
     paddingVertical: 8,
+    flexShrink: 0,
     borderRadius: 999,
   },
 
