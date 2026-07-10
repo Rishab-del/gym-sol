@@ -33,11 +33,12 @@ exports.getHomeData = async (req, res) => {
       workout: {
         title: exerciseCount > 0 ? "Today's Workout" : "No Workout",
         exerciseCount,
-        duration: exerciseCount * 8, // temporary estimate
+        duration: exerciseCount * 8,
       },
     });
   } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({
+      message: err.message,
+    });
   }
 };

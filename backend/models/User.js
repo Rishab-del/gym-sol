@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
+    userId: {
+  type: String,
+  required: true,
+  unique: true,
+},
     name: {
       type: String,
       required: true,
@@ -72,6 +77,49 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 74,
     },
+    height: {
+  type: Number,
+  default: 181,
+},
+
+bodyFat: {
+  type: Number,
+  default: 18,
+},
+
+goal: {
+  type: String,
+  default: "Muscle Gain",
+},
+
+steps: {
+  type: Number,
+  default: 0,
+},
+
+streak: {
+  type: Number,
+  default: 0,
+},
+
+totalWorkouts: {
+  type: Number,
+  default: 0,
+},
+
+fitnessLevel: {
+  type: String,
+  default: "Fitness Enthusiast 💪",
+},
+
+latestAchievement: {
+  type: String,
+  default: "No achievements yet",
+},
+startingWeight: {
+  type: Number,
+  default: 70,
+},
   },
   {
     timestamps: true,

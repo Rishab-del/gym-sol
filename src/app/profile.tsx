@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import api from "../services/api";
 import {
   View,
   Text,
@@ -19,6 +21,20 @@ type StatCardProps = {
 };
 
 export default function ProfileScreen() {
+  const [profile, setProfile] = useState<any>(null);
+  const loadProfile = async () => {
+  try {
+    const res = await api.get("/profile/1");
+    setProfile(res.data);
+  } catch (err) {
+    console.log(err);
+  }
+};
+useFocusEffect(
+  useCallback(() => {
+    loadProfile();
+  }, [])
+);
   return (
     <View style={styles.screen}>
       <ScrollView
@@ -56,18 +72,23 @@ export default function ProfileScreen() {
             </LinearGradient>
 
             <View style={{ flex: 1 }}>
-              <Text style={styles.name}>Rishabh Patel</Text>
-              <Text style={styles.subName}>Fitness Enthusiast 💪</Text>
-
+              <Text style={styles.name}>{profile?.name ?? "Rishabh"}</Text>
+              <Text style={styles.subName}>
+  {profile?.fitnessLevel ?? "Fitness Enthusiast 💪"}
+</Text>
               <View style={styles.badgeRow}>
                 <View style={styles.badge}>
                   <Ionicons name="flame" size={14} color="#F97316" />
-                  <Text style={styles.badgeText}>12 Day Streak</Text>
+                  <Text style={styles.badgeText}>
+  {profile?.streak ?? 0} Day Streak
+</Text>
                 </View>
 
                 <View style={styles.badge}>
                   <Ionicons name="barbell" size={14} color="#A855F7" />
-                  <Text style={styles.badgeText}>48 Workouts</Text>
+                  <Text style={styles.badgeText}>
+  {profile?.totalWorkouts ?? 0} Workouts
+</Text>
                 </View>
               </View>
             </View>
@@ -79,14 +100,14 @@ export default function ProfileScreen() {
           <StatCard
             icon="scale-outline"
             title="Weight"
-            value="74.5"
+            value={String(profile?.weight ?? 0)}
             sub="kg"
             color="#3B82F6"
           />
           <StatCard
             icon="resize-outline"
             title="Height"
-            value="181"
+            value={String(profile?.height ?? 0)}
             sub="cm"
             color="#8B5CF6"
           />
@@ -96,14 +117,14 @@ export default function ProfileScreen() {
           <StatCard
             icon="body-outline"
             title="Body Fat"
-            value="18"
+            value={String(profile?.bodyFat ?? 0)}
             sub="%"
             color="#F97316"
           />
           <StatCard
             icon="walk-outline"
             title="Steps"
-            value="6245"
+            value={String(profile?.steps ?? 0)}
             sub="today"
             color="#22C55E"
           />
@@ -116,10 +137,22 @@ export default function ProfileScreen() {
             <Ionicons name="flag-outline" size={18} color="#A855F7" />
           </View>
 
-          <GoalRow label="Goal" value="Muscle Gain" />
-          <GoalRow label="Calories Target" value="2500 kcal" />
-          <GoalRow label="Protein Target" value="140g" />
-          <GoalRow label="Water Goal" value="3.5L" />
+          <GoalRow
+  label="Goal"
+  value={profile?.goal ?? ""}
+/>
+          <GoalRow
+  label="Calories Target"
+  value={`${profile?.calorieGoal ?? 0} kcal`}
+/>
+          <GoalRow
+  label="Protein Target"
+  value={`${profile?.proteinGoal ?? 0} g`}
+/>
+         <GoalRow
+  label="Water Goal"
+  value={`${profile?.waterGoal ?? 0} L`}
+/>
         </View>
 
         {/* Progress Summary */}
@@ -131,7 +164,9 @@ export default function ProfileScreen() {
 
           <View style={styles.progressRow}>
             <Text style={styles.progressLabel}>Weight Progress</Text>
-            <Text style={styles.progressValue}>70kg → 74.5kg</Text>
+            <Text style={styles.progressValue}>
+  {profile?.startingWeight ?? 0}kg → {profile?.weight ?? 0}kg
+</Text>
           </View>
 
           <View style={styles.progressBar}>
@@ -186,7 +221,7 @@ export default function ProfileScreen() {
           <View style={{ flex: 1 }}>
             <Text style={styles.achievementTitle}>Latest Achievement</Text>
             <Text style={styles.achievementText}>
-              7 Day Workout Streak Completed 🏆
+              {profile?.latestAchievement}
             </Text>
           </View>
         </LinearGradient>

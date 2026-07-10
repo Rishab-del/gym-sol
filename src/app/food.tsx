@@ -33,12 +33,10 @@ type Meal = {
 export default function FoodScreen() {
   const today = new Date().toISOString().split("T")[0];
   const [selectedMeal, setSelectedMeal] =useState<Meal | null>(null);
-const [showMealOptions, setShowMealOptions] = useState(false);
-const [isEditing, setIsEditing] = useState(false);
-const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-
+  const [showMealOptions, setShowMealOptions] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState(today);
-
   const [showCalendar, setShowCalendar] = useState(false);
   const [meals, setMeals] = useState<Meal[]>([]);
   const [nutrition, setNutrition] = useState({
@@ -219,9 +217,6 @@ function NutritionCard({
   );
 }
     
-
-
-
   const progress = useMemo(() => {
     if (targetCalories === 0) return 0;
     return Math.min(100, Math.round((calories / targetCalories) * 100));
